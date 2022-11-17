@@ -1,0 +1,4 @@
+*.pyc
+
+# Directory
+env

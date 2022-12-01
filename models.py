@@ -1,18 +1,18 @@
 import tensorflow as tf
 
-from transformers import TFAutoModel, AutoTokenizer
+from transformers import TFAutoModel, AutoTokenizer, AutoModel
 from sklearn.metrics.pairwise import cosine_similarity
 
 import re
 
 
 class DataProcessing():
-	def __call__(self, text):
+	def normalize_text(self, text):
 		text = text.strip().lower()
 		text = re.sub(r'https?://\S+|www\.\S+', '', text)
-        text = re.sub(r'[-+]?[0-9]+', '', text)
-        text = re.sub(r'[^\w\s]', '', text)
-        return text
+		text = re.sub(r'[-+]?[0-9]+', '', text)
+		text = re.sub(r'[^\w\s]', '', text)
+		return text
 
 
 class SentenceSimilarity():
@@ -34,10 +34,10 @@ class SentenceSimilarity():
 		for i in text:
 			token = self._tokenizer.encode_plus(
 				i,
-				max_length=128,
+				max_length=64,
 				padding='max_length',
 				truncation=True,
-				output_tensors='tf'
+				return_tensors='tf'
 			)
 
 			encoding['input_ids'].append(token['input_ids'][0])
@@ -51,7 +51,7 @@ class SentenceSimilarity():
 
 	def get_features(self, texts):
 		# Text Normalization
-		texts = [DataProcessing(text) for text in texts]
+		texts = [DataProcessing().normalize_text(text) for text in texts]
 
 		# Encode Tokenized
 		encoding = self.tokenize_encoding(texts)
@@ -59,7 +59,7 @@ class SentenceSimilarity():
 		outputs = self._model(encoding).last_hidden_state
 
 
-		att_mask = texts['attention_mask']
+		att_mask = encoding['attention_mask']
 		mask = tf.cast(tf.broadcast_to(tf.expand_dims(att_mask, axis=-1), outputs.shape), dtype='float')
 
 		average_pooling = tf.reduce_sum(outputs, axis=1) / tf.clip_by_value(
@@ -76,9 +76,29 @@ class SentenceSimilarity():
 		features_a = self.get_features(answers)
 
 
-		predictions = list(cosine_similarity(features_q, features_a))
+		predictions = list(cosine_similarity(features_q, features_a).reshape(-1))
 
+		"""
+			Limitasi threshold
+		"""
+		predictions = [prediction for prediction in predictions, if prediction > 0.3]
+
+		
 		return answers[predictions.index(max(predictions))]
+
+
+
+class QuestionAnsweringSystem():
+	def __init__(self, model_name="indolem/indobert-base-uncased"):
+		self.__tokenizer = AutoTokenizer.from_pretrained(model_name)
+		self.__model = AutoModel.from_pretrained(model_name)
+
+
+	
+
+
+	def ask_bot(self, question, context):
+		pass
 
 
 

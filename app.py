@@ -16,29 +16,32 @@ answers = [
 
 
 
-@app.route('/', methods=['GET'])
+@app.route('/', methods=['GET','POST'])
 def init():
-	model = models.SentenceSimilarity()
-	return 'Model Active.'
+	if request.method == 'GET':
+		global model
+		model = models.SentenceSimilarity()
 
+		return 'Model Active.'
 
+	elif request.method == 'POST':
+		question = request.json['question'] 
 
-@app.route('/chatbot', methods=['POST'])
-def interact_with_chatbot():
-	question = request.json['question']
+		try:
+			answer = model.similarity_sentences(question, answers)
+		except:
+			results = 'Jawaban tidak dapat ditemukan.'
+			status_code = '500'
+		else:
+			results = answer
+			status_code = 200
 
-	try:
-		answer = model.similarity_sentences(question, answers)
-	except:
-		results = 'Jawaban tidak dapat ditemukan.'
-		status_code = '500'
-	else:
-		results = answer
-		status_code = 200
+		content = {
+			'status':status_code,
+			'res':results
+		}
 
-	content = {
-		'status':status_code,
-		'res':results
-	}
+		return jsonify(content)
+	
 
-	return jsonify(content)
+		

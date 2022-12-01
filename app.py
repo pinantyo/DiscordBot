@@ -27,10 +27,12 @@ def init():
 	elif request.method == 'POST':
 		question = request.json['question'] 
 
+		model.similarity_sentences(question, answers)
+
 		try:
 			answer = model.similarity_sentences(question, answers)
 		except:
-			results = 'Jawaban tidak dapat ditemukan.'
+			results = 'Mesin tidak aktif.'
 			status_code = '500'
 		else:
 			results = answer

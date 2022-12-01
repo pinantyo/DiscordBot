@@ -1,10 +1,13 @@
 import os
 import discord
 import requests
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
-TOKEN = "MTA0MzEyMTAzOTc0NTQ5OTEzNg.GaKyeV.cp1PrjJFKHd3j7X8U4Qn3n1-Fw_V_V90X0DSos"
-URL = 'http://127.0.0.1:5000'
+TOKEN = os.getenv('DISCORD_TOKEN')
+URL = os.getenv('APP_URL')
 
 
 answers = [

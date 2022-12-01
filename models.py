@@ -71,6 +71,17 @@ class SentenceSimilarity():
 		return tf.stop_gradient(average_pooling).numpy()
 
 
+
+	def max_axis(self, list_val, axis):
+		current = list_val[0]
+
+		for i in list_val:
+			if i[axis] > current[axis]:
+				current = i
+
+		return current[0]
+
+
 	def similarity_sentences(self, question, answers):
 		features_q = self.get_features([question])
 		features_a = self.get_features(answers)
@@ -81,10 +92,13 @@ class SentenceSimilarity():
 		"""
 			Limitasi threshold
 		"""
-		predictions = [prediction for prediction in predictions, if prediction > 0.3]
+		predictions = [(i, prediction) for i, prediction in enumerate(predictions) if prediction > 0.6]
 
-		
-		return answers[predictions.index(max(predictions))]
+		if len(predictions) == 0:
+			predictions = "Jawaban tidak dapat ditemukan"
+			return predictions
+
+		return answers[self.max_axis(predictions, axis=1)]
 
 
 

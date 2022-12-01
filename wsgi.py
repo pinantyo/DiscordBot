@@ -10,5 +10,6 @@ def keep_alive():
     t.start()
 
 if __name__ == "__main__":
-	keep_alive()
+	# keep_alive()
+  run()
 	

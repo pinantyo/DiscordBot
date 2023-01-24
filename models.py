@@ -7,16 +7,21 @@ import re
 
 
 class DataProcessing():
-	def normalize_text(self, text):
-		text = text.strip().lower()
+	def __init__(self, data):
+		self.data = data
+
+
+	def normalize_text(self):
+		text = self.data.lower()
 		text = re.sub(r'https?://\S+|www\.\S+', '', text)
 		text = re.sub(r'[-+]?[0-9]+', '', text)
 		text = re.sub(r'[^\w\s]', '', text)
+		text = text.strip()
 		return text
 
 
 class SentenceSimilarity():
-	def __init__(self, model_name="indolem/indobert-base-uncased"):
+	def __init__(self, model_name="cahya/bert-base-indonesian-1.5G"):
 		self._model = TFAutoModel.from_pretrained(
 			model_name, 
 			from_pt=True, 
@@ -51,11 +56,12 @@ class SentenceSimilarity():
 
 	def get_features(self, texts):
 		# Text Normalization
-		texts = [DataProcessing().normalize_text(text) for text in texts]
+		texts = [DataProcessing(text).normalize_text() for text in texts]
 
-		# Encode Tokenized
+		# Encoding
 		encoding = self.tokenize_encoding(texts)
 
+		# Get last fully connected layers
 		outputs = self._model(encoding).last_hidden_state
 
 
@@ -73,6 +79,9 @@ class SentenceSimilarity():
 
 
 	def max_axis(self, list_val, axis):
+		"""
+			Get highest probabilities index
+		"""
 		current = list_val[0]
 
 		for i in list_val:
@@ -103,17 +112,60 @@ class SentenceSimilarity():
 
 
 class QuestionAnsweringSystem():
-	def __init__(self, model_name="indolem/indobert-base-uncased"):
-		self.__tokenizer = AutoTokenizer.from_pretrained(model_name)
-		self.__model = AutoModel.from_pretrained(model_name)
+	def __init__(self, model_name="indobenchmark/indobert-base-p2"):
+		self.__tokenizer = BertTokenizer.from_pretrained(model_name)
+		self.__model = BertForQuestionAnswering.from_pretrained(model_name)
 
 
-	
+	def ask(question, context):
+	  	# Init
+	  	answer = ""
 
+	  	# Normalisasi
+	  	question_normalized = DataProcessing(question).normalize_text()
 
-	def ask_bot(self, question, context):
-		pass
+	  	# Tokenisasi - Convert string
+	  	input_ids = tokenizer.encode(
+	      	question_normalized, 
+	      	context,
+	  	)
 
+	  	tokens_ids_converted = tokenizer.convert_ids_to_tokens(input_ids)
+
+	  	# Ambil seperator untuk memisahkan question dan context
+	  	separator_ids = input_ids.index(tokenizer.sep_token_id)
+
+	  	segment_text_q = separator_ids + 1
+	  	segment_text_a = len(input_ids) - segment_text_q
+
+	  	segmented_text_ids = [0]*segment_text_q + [1]*segment_text_a
+
+	  	# Pengecekan segmentasi question dan context menghasilkan panjang tokenisasi yang sama
+	  	assert len(segmented_text_ids) == len(input_ids)
+
+	  	# Prediksi
+	  	outputs = model(
+	      	torch.tensor([input_ids]), 
+	      	token_type_ids = torch.tensor([segmented_text_ids])
+	  	)
+
+	  	answer_start = torch.argmax(outputs.start_logits)
+	  	answer_end = torch.argmax(outputs.end_logits)
+
+	  	if answer_end >= answer_start:
+	    	answer = tokens_ids_converted[answer_start]
+
+	    	for i in range(answer_start+1, answer_end+1):
+	      		if tokens_ids_converted[i][0:2] == "##":
+	        		answer += tokens_ids_converted[i][2:]
+	      		else:
+	        		answer += " " + tokens_ids_converted[i]
+	    
+	  
+	  	if answer.startswith("[CLS]"):
+	    	answer = "Jawaban tidak ditemukan"
+	  
+	  	return answer.capitalize()
 
 
 

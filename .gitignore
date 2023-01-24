@@ -4,3 +4,5 @@ __pycache__
 # Directory
 env
 .env
+*.zip
+best_model

@@ -112,7 +112,7 @@ class SentenceSimilarity():
 
 
 class QuestionAnsweringSystem():
-	def __init__(self, model_name="indobenchmark/indobert-base-p2"):
+	def __init__(self, model_name="./best_model"):
 		self.__tokenizer = BertTokenizer.from_pretrained(model_name)
 		self.__model = BertForQuestionAnswering.from_pretrained(model_name)
 

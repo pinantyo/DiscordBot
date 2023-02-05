@@ -1,9 +1,11 @@
 import tensorflow as tf
 
-from transformers import TFAutoModel, AutoTokenizer, AutoModel
+from transformers import TFAutoModel, AutoTokenizer, AutoModel, BertTokenizer, BertForQuestionAnswering
 from sklearn.metrics.pairwise import cosine_similarity
 
+import os
 import re
+import torch
 
 
 class DataProcessing():
@@ -112,12 +114,13 @@ class SentenceSimilarity():
 
 
 class QuestionAnsweringSystem():
-	def __init__(self, model_name="./best_model"):
-		self.__tokenizer = BertTokenizer.from_pretrained(model_name)
-		self.__model = BertForQuestionAnswering.from_pretrained(model_name)
+	def __init__(self, model_name="best_model"):
+
+		self.__tokenizer = BertTokenizer.from_pretrained(os.getcwd() + f'//{model_name}')
+		self.__model = BertForQuestionAnswering.from_pretrained(os.getcwd() + f'//{model_name}')
 
 
-	def ask(question, context):
+	def ask(self, question, context):
 	  	# Init
 	  	answer = ""
 
@@ -125,15 +128,15 @@ class QuestionAnsweringSystem():
 	  	question_normalized = DataProcessing(question).normalize_text()
 
 	  	# Tokenisasi - Convert string
-	  	input_ids = tokenizer.encode(
+	  	input_ids = self.__tokenizer.encode(
 	      	question_normalized, 
 	      	context,
 	  	)
 
-	  	tokens_ids_converted = tokenizer.convert_ids_to_tokens(input_ids)
+	  	tokens_ids_converted = self.__tokenizer.convert_ids_to_tokens(input_ids)
 
 	  	# Ambil seperator untuk memisahkan question dan context
-	  	separator_ids = input_ids.index(tokenizer.sep_token_id)
+	  	separator_ids = input_ids.index(self.__tokenizer.sep_token_id)
 
 	  	segment_text_q = separator_ids + 1
 	  	segment_text_a = len(input_ids) - segment_text_q
@@ -144,7 +147,7 @@ class QuestionAnsweringSystem():
 	  	assert len(segmented_text_ids) == len(input_ids)
 
 	  	# Prediksi
-	  	outputs = model(
+	  	outputs = self.__model(
 	      	torch.tensor([input_ids]), 
 	      	token_type_ids = torch.tensor([segmented_text_ids])
 	  	)
@@ -153,18 +156,17 @@ class QuestionAnsweringSystem():
 	  	answer_end = torch.argmax(outputs.end_logits)
 
 	  	if answer_end >= answer_start:
-	    	answer = tokens_ids_converted[answer_start]
+	  		answer = tokens_ids_converted[answer_start]
 
-	    	for i in range(answer_start+1, answer_end+1):
-	      		if tokens_ids_converted[i][0:2] == "##":
-	        		answer += tokens_ids_converted[i][2:]
-	      		else:
-	        		answer += " " + tokens_ids_converted[i]
-	    
-	  
-	  	if answer.startswith("[CLS]"):
-	    	answer = "Jawaban tidak ditemukan"
-	  
+	  		for i in range(answer_start+1, answer_end+1):
+	  			if tokens_ids_converted[i][0:2] == "##":
+	  				answer += tokens_ids_converted[i][2:]
+	  			else:
+	  				answer += " " + tokens_ids_converted[i]
+
+	  	if answer.startswith("[CLS]") or len(answer.strip()) == 0:
+	  		answer = "Jawaban tidak ditemukan"
+
 	  	return answer.capitalize()
 
 

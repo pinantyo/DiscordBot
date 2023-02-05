@@ -8,6 +8,7 @@ load_dotenv()
 
 TOKEN = os.getenv('DISCORD_TOKEN')
 URL = os.getenv('APP_URL')
+mode = 'sentence_similarity'
 
 
 answers = [
@@ -31,17 +32,24 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
+	result = 'Jawaban tidak ditemukan'
+	mode = None
+
 	if message.author == client.user:
 		return
 
 	# Penambahan trigger dapat dihilangkan (Berdampak pada penggunaan hardware)
-	# if message.content.startswith('!'):
+	if message.content.startswith('/'):
+		mode = "".join(message.content.split('/')[1])
+
 	cleaned_message = {
-		'question': message.content #"".join(message.content.split("!")[1])
+		'question': message.content,
+		'mode':mode
 	}
 
-	result = requests.post(URL, json=cleaned_message)
+	result = requests.post(f'{URL}', json=cleaned_message)
 	await message.channel.send(result.json()['res'])
+	return
 
 
 client.run(TOKEN)

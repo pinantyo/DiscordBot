@@ -11,7 +11,8 @@ answers = [
   "Silahkan daftar kelas TORCHE di https://torche.app/registration",
   "Bisa daftar kelas di https://torche.app/registration",
   "Kalau mau daftar les/kursus, bisa di https://torche.app/registration",
-  "Semua kelas yang tersedia di TORCHE bisa dilihat di https://torche.app/courses"
+  "Semua kelas yang tersedia di TORCHE bisa dilihat di https://torche.app/courses",
+  "Hi, apa kabar? apa yang dapat saya bantu?"
 ]
 
 context = """Torche Education adalah Start-Up Teknologi Pendidikan pertama yang membantu anda belajar dalam bidang teknik khususnya di bidang Teknik Kimia. 
@@ -24,11 +25,13 @@ mode = 'similarity'
 
 @app.route('/', methods=['GET','POST'])
 def init():
-	global model, model_qas, mode
+	global model, model_qas, model_gpt, mode
 	
 	if request.method == 'GET':
 		model = models.SentenceSimilarity()
 		model_qas = models.QuestionAnsweringSystem()
+		model_gpt = models.ChatGPT()
+
 		return 'Model Active.'
 
 	elif request.method == 'POST':
@@ -43,9 +46,10 @@ def init():
 			try:
 				if mode == 'similarity':
 					answer = model.similarity_sentences(question, answers)
-				else:
+				elif mode =='qas':
 					answer = model_qas.ask(question, context)
-
+				else:
+					answer = model_gpt.ask(question)
 			except:
 				results = 'Mesin tidak aktif.'
 				status_code = '500'

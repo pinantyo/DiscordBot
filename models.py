@@ -3,9 +3,15 @@ import tensorflow as tf
 from transformers import TFAutoModel, AutoTokenizer, AutoModel, BertTokenizer, BertForQuestionAnswering
 from sklearn.metrics.pairwise import cosine_similarity
 
-import os
-import re
-import torch
+import os, re, torch, openai
+
+from dotenv import load_dotenv
+
+load_dotenv()
+
+
+
+openai.api_key = os.getenv('OPENAI_API_KEY')
 
 
 class DataProcessing():
@@ -168,6 +174,31 @@ class QuestionAnsweringSystem():
 	  		answer = "Jawaban tidak ditemukan"
 
 	  	return answer.capitalize()
+
+
+class ChatGPT():
+	def __init__(self):
+		pass
+
+	def ask(self, question):
+		print(question)
+
+		response = openai.Completion.create(
+			model="text-ada-001", 
+			prompt=question, 
+			temperature=1, 
+			max_tokens=100
+		)
+
+		response = response.get('choices')
+
+		if response and len(response) > 0:
+			response = response[0]['text']
+		else:
+			response = 'Jawaban tidak ditemukan'
+
+
+		return response
 
 
 

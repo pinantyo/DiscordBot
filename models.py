@@ -14,6 +14,9 @@ load_dotenv()
 openai.api_key = os.getenv('OPENAI_API_KEY')
 
 
+"""
+	# Normalization URL / Numeric / Non-String-Whitespace
+"""
 class DataProcessing():
 	def __init__(self, data):
 		self.data = data
@@ -27,7 +30,9 @@ class DataProcessing():
 		text = text.strip()
 		return text
 
-
+"""
+	Comparison between answers and question with cosine similarity
+"""
 class SentenceSimilarity():
 	def __init__(self, model_name="cahya/bert-base-indonesian-1.5G"):
 		self._model = TFAutoModel.from_pretrained(
@@ -119,6 +124,15 @@ class SentenceSimilarity():
 
 
 
+"""
+	Extractive Retrieval Question Answering System
+	@ context 	- document - paragraphs 
+	@ question 	- model will process question and find most optimal answer pattern from context
+
+	# For changeable context 
+
+"""
+
 class QuestionAnsweringSystem():
 	def __init__(self, model_name="best_model"):
 
@@ -175,7 +189,10 @@ class QuestionAnsweringSystem():
 
 	  	return answer.capitalize()
 
-
+"""
+	Closed-domain Abstractive Question Answering System
+	# For answers that are actual facts
+"""
 class ChatGPT():
 	def __init__(self):
 		pass

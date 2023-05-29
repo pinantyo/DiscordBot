@@ -14,4 +14,14 @@ Methods implemented:
 - Flask
 
 ## System
-![alt text](https://github.com/pinantyo/DiscordBot/blob/master/images/Discord%20Integration.PNG?raw=true)
+- Similarity Mode
+
+![Similarity Mode](https://github.com/pinantyo/DiscordBot/blob/master/images/Discord%20Integration.PNG?raw=true)
+
+- QA Mode
+
+![QAS Mode](https://github.com/pinantyo/DiscordBot/blob/master/images/QAS_mode.PNG?raw=true)
+
+- GPT Mode
+
+![GPT Mode](https://github.com/pinantyo/DiscordBot/blob/master/images/GPT_mode.PNG?raw=true)
